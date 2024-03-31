@@ -40,6 +40,7 @@ class SFTPService {
           type: entry.attr.isDirectory ? FileType.directory : FileType.file,
           size: entry.attr.size ?? 0,
           modificationDate: entry.attr.modifyTime != null ? DateTime.fromMillisecondsSinceEpoch(entry.attr.modifyTime! * 1000) : null,
+          permissions: entry.attr.mode.toString() != '' ? entry.attr.mode.toString() : null,
         ));
       }
     } catch (e) {

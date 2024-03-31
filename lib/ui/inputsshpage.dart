@@ -47,7 +47,7 @@ class _ConnectPageState extends State<ConnectPage> {
           key: _formKey,
           child: Column(
             children: <Widget>[
-              const SizedBox(height: 50),
+              const SizedBox(height: 70),
               CupertinoFormSection(
                 children: [
                   CupertinoTextFormFieldRow(

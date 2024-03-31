@@ -57,6 +57,10 @@ class __TerminalBodyState extends State<_TerminalBody> {
     title = widget.connection.host;
     initTerminal();
   }
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   Future<void> initTerminal() async {
     terminal.write('Connecting...\r\n');

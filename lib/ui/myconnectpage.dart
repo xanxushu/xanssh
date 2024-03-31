@@ -96,7 +96,7 @@ class _MyConnectionsPageState extends State<MyConnectionsPage> {
                                 children: [
                                   CupertinoButton(
                                     child: const Icon(CupertinoIcons.play_fill),
-                                    onPressed: () {
+                                    onPressed: () async{
                                       openNewWindow(context, connection);
                                       setState(() {
                                         _connections = SSHConnectionDatabase.instance

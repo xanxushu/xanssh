@@ -7,6 +7,7 @@ class FileInfo {
   final String name;
   final FileType type;
   final int size;
+  final String? permissions; // 可选，某些情况下可能获取不到
   final DateTime? modificationDate; // 可选，某些情况下可能获取不到
 
   FileInfo({
@@ -14,6 +15,7 @@ class FileInfo {
     required this.type,
     required this.size,
     this.modificationDate,
+    this.permissions,
   });
 }
 
