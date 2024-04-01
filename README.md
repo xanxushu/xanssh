@@ -19,7 +19,6 @@
   - 目前仅支持文件、文件夹暂不支持、但是有计划
   - 该界面不稳定、目前正在测试
 - 实现一些额外的设置功能
-  - 
 
 ## clone注意事项：
 - 确保设备的flutter环境 `flutter doctor -v`，如果没有的话请[下载](https://docs.flutter.dev/get-started/install)
