@@ -1,0 +1,49 @@
+ui/sftppage.dart
+
+  Widget _buildConnectionPanel(
+      String label, Function(SFTPService) onConnected) {
+    setState(() {
+      _connections =
+          SSHConnectionDatabase.instance.readAllConnections('default');
+    });
+
+    return Expanded(
+      child: FutureBuilder<List<SSHConnectionInfo>>(
+          future: _connections,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CupertinoActivityIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (snapshot.hasData) {
+              final connections = snapshot.data!;
+              return ListView.builder(
+                  itemCount: connections.length,
+                  itemBuilder: (context, index) {
+                    final connection = connections[index];
+                    return CupertinoListTile(
+                      title: Text('${connection.username}@${connection.host}'),
+                      // 根据文件类型显示不同的图标
+                      leading: const Icon(CupertinoIcons.device_desktop),
+                      trailing: CupertinoButton(
+                        child: const Icon(CupertinoIcons.play_fill),
+                        onPressed: () async {
+                          final service = SFTPService();
+                          final connected = await service.connect(connection); // 确保等待连接完成
+                          if (connected) {
+                            onConnected(service);
+                          } else {
+                            // 可以在这里处理连接失败的情况，比如通过对话框通知用户
+                            print('无法连接到SFTP服务器。');
+                          }
+                        },
+                      ),
+                    );
+                  });
+            } else {
+              return const Center(child: Text('没有保存的连接。'));
+            }
+          }),
+    );
+  }
+*/

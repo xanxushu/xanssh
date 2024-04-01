@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'models/connect.dart';
 import 'ui/terminalpage.dart';
 import 'ui/myconnectpage.dart';
 import 'ui/sftppage.dart';
+import 'ui/settingpage.dart';
 import 'dart:convert';
 
 void main(List<String> args) {
@@ -19,6 +21,8 @@ void main(List<String> args) {
       ));
     }
   } else {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
     runApp(const MyApp());
   }
 }
@@ -55,6 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _widgetOptions = [
       const MyConnectionsPage(),
       const SFTPExplorer(), // 将原有的终端连接逻辑放入此页面
+      const SettingPage(),
     ];
   }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import '../models/connect.dart';
 import 'inputsshpage.dart';
 import '../service/databasehelp.dart';
@@ -88,7 +87,7 @@ class _MyConnectionsPageState extends State<MyConnectionsPage> {
                               const SizedBox(height: 4), // 调整间距
                               Text(
                                 '上次连接: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(connection.lastLoginTime!)}',
-                                style: const TextStyle(fontSize: 15, color: Colors.blueGrey,),
+                                style: const TextStyle(fontSize: 15, color: CupertinoColors.systemBlue,),
                                 
                               ),
                               Row(

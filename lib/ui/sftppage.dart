@@ -1,3 +1,6 @@
+// ignore_for_file: use_build_context_synchronously
+import 'dart:io';
+import 'package:path/path.dart' as path;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:xanssh/models/sftp.dart';
@@ -42,7 +45,8 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
                     onPressed: () => showConnectionListModal(context, 'Left'),
                   ),
                   Expanded(
-                      child: _buildFileBrowser(_filesLeft, _currentPathLeft,true)),
+                      child: _buildFileBrowser(
+                          _filesLeft, _currentPathLeft, true)),
                 ],
               ),
             ),
@@ -55,7 +59,8 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
                     onPressed: () => showConnectionListModal(context, 'Right'),
                   ),
                   Expanded(
-                      child: _buildFileBrowser(_filesRight, _currentPathRight,false)),
+                      child: _buildFileBrowser(
+                          _filesRight, _currentPathRight, false)),
                 ],
               ),
             ),
@@ -65,55 +70,10 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
     );
   }
 
-/*  Widget _buildConnectionPanel(
-      String label, Function(SFTPService) onConnected) {
-    setState(() {
-      _connections =
-          SSHConnectionDatabase.instance.readAllConnections('default');
-    });
-
-    return Expanded(
-      child: FutureBuilder<List<SSHConnectionInfo>>(
-          future: _connections,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CupertinoActivityIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            } else if (snapshot.hasData) {
-              final connections = snapshot.data!;
-              return ListView.builder(
-                  itemCount: connections.length,
-                  itemBuilder: (context, index) {
-                    final connection = connections[index];
-                    return CupertinoListTile(
-                      title: Text('${connection.username}@${connection.host}'),
-                      // 根据文件类型显示不同的图标
-                      leading: const Icon(CupertinoIcons.device_desktop),
-                      trailing: CupertinoButton(
-                        child: const Icon(CupertinoIcons.play_fill),
-                        onPressed: () async {
-                          final service = SFTPService();
-                          final connected = await service.connect(connection); // 确保等待连接完成
-                          if (connected) {
-                            onConnected(service);
-                          } else {
-                            // 可以在这里处理连接失败的情况，比如通过对话框通知用户
-                            print('无法连接到SFTP服务器。');
-                          }
-                        },
-                      ),
-                    );
-                  });
-            } else {
-              return const Center(child: Text('没有保存的连接。'));
-            }
-          }),
-    );
-  }
-*/
-  Widget _buildFileBrowser(List<FileInfo>? files, String currentPath, bool isLeftPanel) {
-    ScrollController scrollController = isLeftPanel ? _scrollControllerLeft : _scrollControllerRight;
+  Widget _buildFileBrowser(
+      List<FileInfo>? files, String currentPath, bool isLeftPanel) {
+    ScrollController scrollController =
+        isLeftPanel ? _scrollControllerLeft : _scrollControllerRight;
     return Column(
       children: [
         Padding(
@@ -121,70 +81,60 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
           child: Text('当前路径: $currentPath',
               style: const TextStyle(fontWeight: FontWeight.bold)),
         ),
-      Expanded(
-        child: DragTarget<FileInfo>(
-          onWillAccept: (file) => file != null && file.type != FileType.directory, // 仅接受文件类型，如果需要支持目录，可以调整这里的逻辑
-          onAccept: (file) async {
-            // 处理文件传输的逻辑
-            // isLeftPanel 表示是否是左侧面板，根据这个标志可以判断文件是从左拖到右还是从右拖到左
-            String targetPath = isLeftPanel ? _currentPathRight : _currentPathLeft;
-            // 根据实际情况调用上传或下载方法...
-          },
-          builder: (context, candidateData, rejectedData) {
-            return files == null
-                ? const Center(child: Text('请选择一个连接。'))
-                : CupertinoScrollbar(
-                    controller: scrollController,
-                    child: ListView.builder(
+        Expanded(
+          child: DragTarget<FileInfo>(
+            onWillAccept: (file) =>
+                file != null &&
+                file.type != FileType.directory, // 仅接受文件类型，如果需要支持目录，可以调整这里的逻辑
+            onAccept: (file) async {
+              await transferFileBetweenServers(file, !isLeftPanel);
+            },
+            builder: (context, candidateData, rejectedData) {
+              return files == null
+                  ? const Center(child: Text('请选择一个连接。'))
+                  : CupertinoScrollbar(
                       controller: scrollController,
-                      itemCount: files.length,
-                      itemBuilder: (context, index) {
-                        final file = files[index];
-                        // 这里仅对文件应用拖拽功能，目录不应用
-                        return file.type == FileType.directory
-                            ? CupertinoListTile(
-                                title: Text(file.name),
-                                leading: const Icon(CupertinoIcons.folder),
-                                onTap: () => _handleFileOrDirectoryTap(file, currentPath),
-                              )
-                            : _buildDraggableFileItem(file, currentPath); // 使用之前定义的方法构建可拖拽的文件项
-                      },
-                    ),
-                  );
-          },
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: files.length,
+                        itemBuilder: (context, index) {
+                          final file = files[index];
+                          // 这里仅对文件应用拖拽功能，目录不应用
+                          return file.type == FileType.directory
+                              ? CupertinoListTile(
+                                  title: Text(file.name),
+                                  leading: const Icon(CupertinoIcons.folder),
+                                  trailing: Text(file.size.toString()),
+                                  onTap: () => _handleFileOrDirectoryTap(
+                                      file, currentPath, isLeftPanel),
+                                )
+                              : _buildDraggableFileItem(file, currentPath,
+                                  isLeftPanel); // 使用之前定义的方法构建可拖拽的文件项
+                        },
+                      ),
+                    );
+            },
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   void _listDirectoryLeft(String username) async {
     if (_serviceLeft != null) {
       if (username == 'root') {
         String path = '/';
         final files = await _serviceLeft!.listDirectory(path); // 假设列出根目录
-        final processedFiles = files.where((file) => file.name != '.').toList();
-        processedFiles.sort((a, b) {
-          if (a.name == '..') return -1;
-          if (b.name == '..') return 1;
-          return a.name.compareTo(b.name);
-        });
         setState(() {
           _currentPathLeft = path;
-          _filesLeft = processedFiles.where((file) => file.name != '..').toList(); // 根目录不显示'..'目录
+          _filesLeft = files;
         });
       } else {
         String path = '/home/$username';
         final files = await _serviceLeft!.listDirectory(path);
-        final processedFiles = files.where((file) => file.name != '.').toList();
-        processedFiles.sort((a, b) {
-          if (a.name == '..') return -1;
-          if (b.name == '..') return 1;
-          return a.name.compareTo(b.name);
-        });
         setState(() {
           _currentPathLeft = path;
-          _filesLeft = processedFiles; // 更新文件列表
+          _filesLeft = files; // 更新文件列表
         });
       }
     }
@@ -195,28 +145,16 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
       if (username == 'root') {
         String path = '/';
         final files = await _serviceRight!.listDirectory(path); // 假设列出根目录
-        final processedFiles = files.where((file) => file.name != '.').toList();
-        processedFiles.sort((a, b) {
-          if (a.name == '..') return -1;
-          if (b.name == '..') return 1;
-          return a.name.compareTo(b.name);
-        });
         setState(() {
           _currentPathRight = path;
-          _filesRight = processedFiles.where((file) => file.name != '..').toList(); // 根目录不显示'..'目录
+          _filesRight = files; // 根目录不显示'..'目录
         });
       } else {
         String path = '/home/$username';
         final files = await _serviceRight!.listDirectory(path);
-        final processedFiles = files.where((file) => file.name != '.').toList();
-        processedFiles.sort((a, b) {
-          if (a.name == '..') return -1;
-          if (b.name == '..') return 1;
-          return a.name.compareTo(b.name);
-        });
         setState(() {
           _currentPathRight = path;
-          _filesRight = processedFiles; // 更新文件列表
+          _filesRight = files; // 更新文件列表
         });
       }
     }
@@ -226,6 +164,7 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
       BuildContext context, String label) async {
     List<SSHConnectionInfo>? connections;
     String errorMessage = '';
+    bool nuler = false;
 
     try {
       connections =
@@ -245,7 +184,8 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
       builder: (BuildContext context) {
         // 检查连接是否为空或出现错误
         if (connections == null || connections.isEmpty) {
-          return Center(child: Text(errorMessage));
+          //return Center(child: Text(errorMessage));
+          nuler = true;
         }
 
         // 如果有连接数据，则构建列表显示
@@ -262,55 +202,78 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
             ),
           ),
           // 使用Expanded包裹ListView以充满剩余空间
-          Expanded(
-            child: ListView.builder(
-              itemCount: connections.length,
-              itemBuilder: (context, index) {
-                final connection = connections![index];
-                return CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.device_desktop),
-                  title: Text(
-                    '${connection.username}@${connection.host}',
-                    style: const TextStyle(color: Colors.blueAccent),
+          nuler
+              ? Expanded(
+                  child: CupertinoListTile(
+                  title: Text(errorMessage),
+                ))
+              : Expanded(
+                  child: ListView.builder(
+                    itemCount: connections!.length,
+                    itemBuilder: (context, index) {
+                      final connection = connections![index];
+                      return CupertinoListTile(
+                        leading: const Icon(CupertinoIcons.device_desktop),
+                        title: Text(
+                          '${connection.username}@${connection.host}',
+                          style: const TextStyle(color: Colors.blueAccent),
+                        ),
+                        onTap: () async {
+                          final service = SFTPService();
+                          final connected = await service.connect(connection);
+                          if (connected) {
+                            if (label == 'Left') {
+                              _serviceLeft = service;
+                              _listDirectoryLeft(connection.username);
+                            } else {
+                              _serviceRight = service;
+                              _listDirectoryRight(connection.username);
+                            }
+                            Navigator.of(context).pop();
+                          } else {
+                            // 可以在这里显示连接失败的信息
+                            Navigator.of(context).pop();
+                          }
+                        },
+                      );
+                    },
                   ),
-                  onTap: () async {
-                    final service = SFTPService();
-                    final connected = await service.connect(connection);
-                    if (connected) {
-                      if (label == 'Left') {
-                        _serviceLeft = service;
-                        _listDirectoryLeft(connection.username);
-                      } else {
-                        _serviceRight = service;
-                        _listDirectoryRight(connection.username);
-                      }
-                      Navigator.of(context).pop();
-                    } else {
-                      // 可以在这里显示连接失败的信息
-                      Navigator.of(context).pop();
-                    }
-                  },
-                );
-              },
-            ),
-          ),
+                )
         ]);
       },
     );
   }
 
-  void _handleFileOrDirectoryTap(FileInfo file, String currentPath) async {
+  void _handleFileOrDirectoryTap(
+      FileInfo file, String currentPath, bool isLeftOrRight) async {
     if (file.type == FileType.directory) {
-      // 如果是目录，则更新列表和当前路径
-      String newPath = currentPath.endsWith('/')
-          ? '$currentPath${file.name}'
-          : '$currentPath/${file.name}';
-      final files = await _serviceLeft!
-          .listDirectory(newPath); // 根据实际情况使用 _serviceLeft 或 _serviceRight
-      setState(() {
-        _filesLeft = files; // 根据是左侧还是右侧进行更新
-        _currentPathLeft = newPath; // 同上
-      });
+      // 构建新的路径
+      String newPath;
+      if (file.name == '..') {
+        // 使用Uri解析路径，处理回退到上一级目录的情况
+        final currentUri = Uri.directory(currentPath);
+        final parentUri = Uri.directory(currentUri.resolve('..').path);
+        newPath = parentUri.path;
+      } else {
+        // 对于正常目录，继续叠加路径
+        newPath = Uri.directory(currentPath).resolve(file.name).path;
+      }
+
+      // 调用服务列出新路径下的文件
+
+      if (isLeftOrRight) {
+        final files = await _serviceLeft!.listDirectory(newPath);
+        setState(() {
+          _filesLeft = files;
+          _currentPathLeft = newPath;
+        });
+      } else {
+        final files = await _serviceRight!.listDirectory(newPath);
+        setState(() {
+          _filesRight = files;
+          _currentPathRight = newPath;
+        });
+      }
     } else {
       // 如果是文件，弹出一个窗口显示文件信息
       showCupertinoDialog(
@@ -337,32 +300,90 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
     }
   }
 
-Widget _buildDraggableFileItem(FileInfo file, String currentPath) {
-  return Draggable<FileInfo>(
-    data: file,
-    feedback: CupertinoPageScaffold(
-      child: SizedBox( 
-        width: MediaQuery.of(context).size.width,
-        child:CupertinoListTile(
-        title: Text(file.name),
-        leading: Icon(file.type == FileType.directory ? CupertinoIcons.folder : CupertinoIcons.doc),
+  Future<void> transferFileBetweenServers(
+      FileInfo file, bool fromLeftToRight) async {
+    SFTPService sourceService =
+        fromLeftToRight ? _serviceLeft! : _serviceRight!;
+    SFTPService targetService =
+        fromLeftToRight ? _serviceRight! : _serviceLeft!;
+    String sourcePath = fromLeftToRight ? _currentPathLeft : _currentPathRight;
+    String targetPath = fromLeftToRight ? _currentPathRight : _currentPathLeft;
+    String fileName = file.name;
+
+    // 1. 创建本地临时文件路径
+    Directory tempDir = Directory.systemTemp;
+    String localTempFilePath = path.join(tempDir.path, fileName);
+
+    // 2. 从源服务器下载文件到本地临时路径
+    bool downloadResult = await sourceService.downloadFile(
+        "$sourcePath/$fileName", localTempFilePath);
+    if (!downloadResult) {
+      print('sourcepath:$sourcePath');
+      print('targetPath:$targetPath');
+      print("下载文件失败");
+      return;
+    }
+
+    // 3. 从本地上传文件到目标服务器
+    bool uploadResult = await targetService.uploadFile(
+        localTempFilePath, "$targetPath/$fileName");
+    if (!uploadResult) {
+      print('sourcepath:$sourcePath');
+      print('targetPath:$targetPath');
+      print("上传文件失败");
+      // 尝试删除本地临时文件
+      File(localTempFilePath).delete();
+      return;
+    }
+
+    print("文件传输成功");
+
+    // 4. 清理本地临时文件
+    File(localTempFilePath).delete();
+    if (downloadResult && uploadResult){
+      final filesL = await _serviceLeft!.listDirectory(_currentPathLeft);
+      final filesR = await _serviceRight!.listDirectory(_currentPathRight);
+      setState(() {
+        _filesLeft = filesL;
+        _filesRight = filesR;
+      });
+    }
+  }
+
+  Widget _buildDraggableFileItem(
+      FileInfo file, String currentPath, bool isLeft) {
+    return Draggable<FileInfo>(
+      data: file,
+      feedback: CupertinoPageScaffold(
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width,
+          child: CupertinoListTile(
+            title: Text(file.name),
+            trailing: Text(file.size.toString()),
+            leading: Icon(file.type == FileType.directory
+                ? CupertinoIcons.folder
+                : CupertinoIcons.doc),
+          ),
+        ),
       ),
+      childWhenDragging: Opacity(
+        opacity: 0.5,
+        child: CupertinoListTile(
+          title: Text(file.name),
+          trailing: Text(file.size.toString()),
+          leading: Icon(file.type == FileType.directory
+              ? CupertinoIcons.folder
+              : CupertinoIcons.doc),
+        ),
       ),
-    ),
-    childWhenDragging: Opacity(
-      opacity: 0.5,
       child: CupertinoListTile(
         title: Text(file.name),
-        leading: Icon(file.type == FileType.directory ? CupertinoIcons.folder : CupertinoIcons.doc),
+        trailing: Text(file.size.toString()),
+        leading: Icon(file.type == FileType.directory
+            ? CupertinoIcons.folder
+            : CupertinoIcons.doc),
+        onTap: () => _handleFileOrDirectoryTap(file, currentPath, isLeft),
       ),
-    ),
-    child: CupertinoListTile(
-      title: Text(file.name),
-      leading: Icon(file.type == FileType.directory ? CupertinoIcons.folder : CupertinoIcons.doc),
-      onTap: () => _handleFileOrDirectoryTap(file, currentPath),
-    ),
-  );
-}
-
-
+    );
+  }
 }
