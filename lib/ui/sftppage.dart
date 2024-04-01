@@ -19,6 +19,8 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
   List<FileInfo>? _filesRight;
   String _currentPathLeft = '/';
   String _currentPathRight = '/';
+  final ScrollController _scrollControllerLeft = ScrollController();
+  final ScrollController _scrollControllerRight = ScrollController();
 
 //  Future<List<SSHConnectionInfo>>? _connections;
 
@@ -111,6 +113,7 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
   }
 */
   Widget _buildFileBrowser(List<FileInfo>? files, String currentPath, bool isLeftPanel) {
+    ScrollController scrollController = isLeftPanel ? _scrollControllerLeft : _scrollControllerRight;
     return Column(
       children: [
         Padding(
@@ -131,7 +134,9 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
             return files == null
                 ? const Center(child: Text('请选择一个连接。'))
                 : CupertinoScrollbar(
+                    controller: scrollController,
                     child: ListView.builder(
+                      controller: scrollController,
                       itemCount: files.length,
                       itemBuilder: (context, index) {
                         final file = files[index];
@@ -336,9 +341,12 @@ Widget _buildDraggableFileItem(FileInfo file, String currentPath) {
   return Draggable<FileInfo>(
     data: file,
     feedback: CupertinoPageScaffold(
-      child: CupertinoListTile(
+      child: SizedBox( 
+        width: MediaQuery.of(context).size.width,
+        child:CupertinoListTile(
         title: Text(file.name),
         leading: Icon(file.type == FileType.directory ? CupertinoIcons.folder : CupertinoIcons.doc),
+      ),
       ),
     ),
     childWhenDragging: Opacity(
