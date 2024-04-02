@@ -7,6 +7,7 @@ import 'ui/myconnectpage.dart';
 import 'ui/sftppage.dart';
 import 'ui/settingpage.dart';
 import 'dart:convert';
+import 'dart:io';
 
 void main(List<String> args) {
   if (args.firstOrNull == 'multi_window') {
@@ -21,9 +22,14 @@ void main(List<String> args) {
       ));
     }
   } else {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-    runApp(const MyApp());
+    if (Platform.isAndroid || Platform.isIOS) {
+      runApp(const MyApp());
+    } else {
+      // 初始化sqflite
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+      runApp(const MyApp());
+    }
   }
 }
 
@@ -78,6 +84,9 @@ class _MyHomePageState extends State<MyHomePage> {
             Expanded(
               child: _widgetOptions.elementAt(_selectedIndex),
             ),
+            Padding(
+            padding: const EdgeInsets.only(bottom: 4.0), // 减少底部空间
+            child: 
             CupertinoTabBar(
               items: const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(
@@ -95,6 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
               currentIndex: _selectedIndex,
               onTap: _onItemTapped,
+            ),
             ),
           ],
         ),

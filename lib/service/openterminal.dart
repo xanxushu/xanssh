@@ -23,6 +23,7 @@ void openNewWindow(BuildContext context, SSHConnectionInfo connection) async {
   }
   // 现在，根据平台打开新窗口或导航至 TerminalPage
   if (Platform.isIOS || Platform.isAndroid) {
+    if (!context.mounted) return;
       Navigator.of(context).push(CupertinoPageRoute(
         builder: (context) => TerminalPage(connection: connection),
       ));

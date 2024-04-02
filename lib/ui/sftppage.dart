@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:xanssh/models/sftp.dart';
 import 'package:xanssh/models/connect.dart';
 import 'package:xanssh/service/sftphelp.dart';
 import 'package:xanssh/service/databasehelp.dart';
+import 'package:xanssh/ui/cupertinosnackbar.dart';
 
 class SFTPExplorer extends StatefulWidget {
   const SFTPExplorer({super.key});
@@ -40,9 +42,54 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
             Expanded(
               child: Column(
                 children: [
-                  CupertinoButton(
-                    child: const Text('显示连接列表'),
-                    onPressed: () => showConnectionListModal(context, 'Left'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CupertinoButton(
+                        child: const Icon(CupertinoIcons.add),
+                        onPressed: () =>
+                            showConnectionListModal(context, 'Left'),
+                      ),
+                      CupertinoButton(
+                        child: const Icon(CupertinoIcons.folder_badge_plus),
+                        onPressed: () async {
+                          if (_serviceLeft != null) {
+                            final String? newFolderName =
+                                await showCreateFolderDialog(context);
+                            if (newFolderName != null &&
+                                newFolderName.trim().isNotEmpty) {
+                              final bool success = await _serviceLeft!
+                                  .createDirectory(
+                                      '$_currentPathLeft/$newFolderName');
+                              if (success) {
+                                // 如果创建成功，刷新当前目录列表
+                                final filesAfter = await _serviceLeft!
+                                    .listDirectory(_currentPathLeft);
+                                setState(() {
+                                  _filesLeft = filesAfter;
+                                });
+                                showCupertinoSnackBar(
+                                    context: context,
+                                    message: '文件夹创建成功',
+                                    durationMillis: 2 * 1000);
+                              } else {
+                                // 处理创建失败的情况
+                                showCupertinoSnackBar(
+                                    context: context,
+                                    message: '文件夹创建失败',
+                                    durationMillis: 2 * 1000);
+                              }
+                            }
+                          } else {
+                            // 处理未选择连接的情况
+                            showCupertinoSnackBar(
+                                context: context,
+                                message: '请先选择一个连接',
+                                durationMillis: 2 * 1000);
+                          }
+                        },
+                      ),
+                    ],
                   ),
                   Expanded(
                       child: _buildFileBrowser(
@@ -54,9 +101,54 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
             Expanded(
               child: Column(
                 children: [
-                  CupertinoButton(
-                    child: const Icon(CupertinoIcons.add),
-                    onPressed: () => showConnectionListModal(context, 'Right'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CupertinoButton(
+                        child: const Icon(CupertinoIcons.add),
+                        onPressed: () =>
+                            showConnectionListModal(context, 'Right'),
+                      ),
+                      CupertinoButton(
+                        child: const Icon(CupertinoIcons.folder_badge_plus),
+                        onPressed: () async {
+                          if (_serviceRight != null) {
+                            final String? newFolderName =
+                                await showCreateFolderDialog(context);
+                            if (newFolderName != null &&
+                                newFolderName.trim().isNotEmpty) {
+                              final bool success = await _serviceRight!
+                                  .createDirectory(
+                                      '$_currentPathRight/$newFolderName');
+                              if (success) {
+                                // 如果创建成功，刷新当前目录列表
+                                final filesAfter = await _serviceRight!
+                                    .listDirectory(_currentPathRight);
+                                setState(() {
+                                  _filesRight = filesAfter;
+                                });
+                                showCupertinoSnackBar(
+                                    context: context,
+                                    message: '成功创建文件夹',
+                                    durationMillis: 2 * 1000);
+                              } else {
+                                // 处理创建失败的情况
+                                showCupertinoSnackBar(
+                                    context: context,
+                                    message: '文件夹创建失败',
+                                    durationMillis: 2 * 1000);
+                              }
+                            }
+                          } else {
+                            // 处理未选择连接的情况
+                            showCupertinoSnackBar(
+                                context: context,
+                                message: '请先选择一个连接',
+                                durationMillis: 2 * 1000);
+                          }
+                        },
+                      ),
+                    ],
                   ),
                   Expanded(
                       child: _buildFileBrowser(
@@ -120,7 +212,7 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
     );
   }
 
-  void _listDirectoryLeft(String username) async {
+  void _listDirectoryLeft(String username, String host) async {
     if (_serviceLeft != null) {
       if (username == 'root') {
         String path = '/';
@@ -130,7 +222,16 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
           _filesLeft = files;
         });
       } else {
-        String path = '/home/$username';
+        String path = '';
+        if (host == 'localhost') {
+          if (Platform.isMacOS) {
+            path = '/Users/$username';
+          } else {
+            path = '/home/$username';
+          }
+        } else {
+          path = '/home/$username';
+        }
         final files = await _serviceLeft!.listDirectory(path);
         setState(() {
           _currentPathLeft = path;
@@ -140,7 +241,7 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
     }
   }
 
-  void _listDirectoryRight(String username) async {
+  void _listDirectoryRight(String username, String host) async {
     if (_serviceRight != null) {
       if (username == 'root') {
         String path = '/';
@@ -150,7 +251,16 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
           _filesRight = files; // 根目录不显示'..'目录
         });
       } else {
-        String path = '/home/$username';
+        String path = '';
+        if (host == 'localhost') {
+          if (Platform.isMacOS) {
+            path = '/Users/$username';
+          } else {
+            path = '/home/$username';
+          }
+        } else {
+          path = '/home/$username';
+        }
         final files = await _serviceRight!.listDirectory(path);
         setState(() {
           _currentPathRight = path;
@@ -224,10 +334,12 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
                           if (connected) {
                             if (label == 'Left') {
                               _serviceLeft = service;
-                              _listDirectoryLeft(connection.username);
+                              _listDirectoryLeft(
+                                  connection.username, connection.host);
                             } else {
                               _serviceRight = service;
-                              _listDirectoryRight(connection.username);
+                              _listDirectoryRight(
+                                  connection.username, connection.host);
                             }
                             Navigator.of(context).pop();
                           } else {
@@ -284,11 +396,33 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
             content: Column(
               children: <Widget>[
                 Text('大小: ${file.size}'),
-                Text('修改日期: ${file.modificationDate}'),
-                // 可以添加更多文件信息
+                Text(
+                    '修改日期: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(file.modificationDate!)}'),
               ],
             ),
             actions: <Widget>[
+              CupertinoDialogAction(
+                  child: const Text('删除'),
+                  onPressed: () async {
+                    final filename = file.name;
+                    if (isLeftOrRight) {
+                      await _serviceLeft!.deleteFile("$currentPath/$filename");
+                      final fileafter =
+                          await _serviceLeft!.listDirectory(currentPath);
+                      setState(() {
+                        _filesLeft = fileafter;
+                      });
+                    } else {
+                      await _serviceRight!
+                          .deleteFile('$currentPath}/$filename');
+                      final fileafter =
+                          await _serviceRight!.listDirectory(currentPath);
+                      setState(() {
+                        _filesRight = fileafter;
+                      });
+                    }
+                    Navigator.of(context).pop();
+                  }),
               CupertinoDialogAction(
                 child: const Text('关闭'),
                 onPressed: () => Navigator.of(context).pop(),
@@ -318,9 +452,8 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
     bool downloadResult = await sourceService.downloadFile(
         "$sourcePath/$fileName", localTempFilePath);
     if (!downloadResult) {
-      print('sourcepath:$sourcePath');
-      print('targetPath:$targetPath');
-      print("下载文件失败");
+      showCupertinoSnackBar(
+          context: context, message: '文件下载失败', durationMillis: 2 * 1000);
       return;
     }
 
@@ -328,19 +461,19 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
     bool uploadResult = await targetService.uploadFile(
         localTempFilePath, "$targetPath/$fileName");
     if (!uploadResult) {
-      print('sourcepath:$sourcePath');
-      print('targetPath:$targetPath');
-      print("上传文件失败");
+      showCupertinoSnackBar(
+          context: context, message: '文件上传失败', durationMillis: 2 * 1000);
       // 尝试删除本地临时文件
       File(localTempFilePath).delete();
       return;
     }
 
-    print("文件传输成功");
+    showCupertinoSnackBar(
+        context: context, message: '文件传输成功', durationMillis: 2 * 1000);
 
     // 4. 清理本地临时文件
     File(localTempFilePath).delete();
-    if (downloadResult && uploadResult){
+    if (downloadResult && uploadResult) {
       final filesL = await _serviceLeft!.listDirectory(_currentPathLeft);
       final filesR = await _serviceRight!.listDirectory(_currentPathRight);
       setState(() {
@@ -385,5 +518,41 @@ class _SFTPExplorerState extends State<SFTPExplorer> {
         onTap: () => _handleFileOrDirectoryTap(file, currentPath, isLeft),
       ),
     );
+  }
+
+  Future<String?> showCreateFolderDialog(BuildContext context) async {
+    String? folderName;
+
+    await showCupertinoDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: const Text('新文件夹命名为'),
+          content: CupertinoTextField(
+            placeholder: '请输入新文件夹名称',
+            onChanged: (String value) {
+              folderName = value;
+            },
+          ),
+          actions: <CupertinoDialogAction>[
+            CupertinoDialogAction(
+              child: const Text('取消'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              onPressed: () {
+                Navigator.of(context).pop(folderName);
+              },
+              child: const Text('创建'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return folderName;
   }
 }

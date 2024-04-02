@@ -9,6 +9,8 @@ class FileInfo {
   final int size;
   final String? permissions; // 可选，某些情况下可能获取不到
   final DateTime? modificationDate; // 可选，某些情况下可能获取不到
+  final String? group; // 可选，某些情况下可能获取不到
+  final String? user; // 可选，某些情况下可能获取不到
 
   FileInfo({
     required this.name,
@@ -16,6 +18,8 @@ class FileInfo {
     required this.size,
     this.modificationDate,
     this.permissions,
+    this.group,
+    this.user,
   });
 }
 

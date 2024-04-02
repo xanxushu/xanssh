@@ -1,4 +1,4 @@
-package com.example.xanssh
+package com.xanxushu.xanssh
 
 import io.flutter.embedding.android.FlutterActivity
 

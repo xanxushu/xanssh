@@ -18,7 +18,7 @@ class SFTPService {
       _sftp = await _client?.sftp();
       return true;
     } catch (e) {
-      print('Error connecting to SFTP server: $e');
+      //print('Error connecting to SFTP server: $e');
       return false;
     }
   }
@@ -47,6 +47,8 @@ class SFTPService {
           permissions: entry.attr.mode.toString() != ''
               ? entry.attr.mode.toString()
               : null,
+          user: entry.attr.userID.toString(),
+          group: entry.attr.groupID.toString(),
         ));
       }
       processedFiles = files.where((file) => file.name != '.').toList();
@@ -56,9 +58,9 @@ class SFTPService {
         return a.name.compareTo(b.name);
       });
     } catch (e) {
-      print('Error listing directory: $e');
-      print(processedFiles.toList());
-      print(files.toList());
+      //print('Error listing directory: $e');
+      //print(processedFiles.toList());
+      //print(files.toList());
     }
     if (path == '/') {
       return processedFiles
@@ -79,7 +81,7 @@ class SFTPService {
       await remoteFile?.close();
       return true;
     } catch (e) {
-      print('Error uploading file: $e');
+      //print('Error uploading file: $e');
       return false;
     }
   }
@@ -96,7 +98,40 @@ class SFTPService {
       await file.writeAsBytes(buffer.expand((i) => i).toList());
       return true;
     } catch (e) {
-      print('Error downloading file: $e');
+      //print('Error downloading file: $e');
+      return false;
+    }
+  }
+
+  /// 创建目录
+  Future<bool> createDirectory(String remotePath) async {
+    try {
+      await _sftp?.mkdir(remotePath);
+      return true;
+    } catch (e) {
+      //print('Error creating directory: $e');
+      return false;
+    }
+  }
+
+  /// 删除文件
+  Future<bool> deleteFile(String remotePath) async {
+    try {
+      await _sftp?.remove(remotePath);
+      return true;
+    } catch (e) {
+      //print('Error deleting file: $e');
+      return false;
+    }
+  }
+
+  /// 删除目录
+  Future<bool> deleteDirectory(String remotePath) async {
+    try {
+      await _sftp?.rmdir(remotePath);
+      return true;
+    } catch (e) {
+      //print('Error deleting directory: $e');
       return false;
     }
   }
