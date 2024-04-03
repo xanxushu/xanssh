@@ -19,6 +19,19 @@
   - 目前仅支持文件、文件夹暂不支持、但是有计划
   - 该界面不稳定、目前正在测试
 - 实现一些额外的设置功能
+  - 虽然不能同步但是可以将记录导出和导入
+  - 这个是加密的所以不用担心
+  - 密钥具有一次性
+
+## 站在巨人的肩膀上
+- [dartssh](https://pub.dev/packages/dartssh2)提供了SSH、SFTP相关功能
+- [xterm](https://pub.dev/packages/xterm)提供了终端构建
+- [rmalviya在回答中手搓的](https://stackoverflow.com/questions/55382651/use-snackbar-with-cupertinopagescaffold)Cupertino风格的SnackBar
+
+## 一个不那么成功的样品
+- 全平台使用Cupertino风格除了便利一点外还会带来除Apple设备外的不适配
+- 一些组件的构建方式并不是最优解，因为还没学会Provider
+- 移动端的开始按钮仍有一些问题，好在没什么人会在移动端进行大量的SSH、SFTP操作；事实上SFTP没有什么问题，主要是SSH和终端构建的连接中出了些问题
 
 ## clone注意事项：
 - 确保设备的flutter环境 `flutter doctor -v`，如果没有的话请[下载](https://docs.flutter.dev/get-started/install)
