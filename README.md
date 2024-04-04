@@ -1,4 +1,4 @@
-# xanssh
+# xanssh（win和Linux）其他版本请查看[main分支](https://github.com/xanxushu/xanssh/tree/windows)
 
 ## 简介
 
@@ -6,7 +6,7 @@
 
 ## 构建
 
-- flutter stable version 最好是3.16.x版本及以上，但最好还是3.16.x版本，低版本和高版本都会有引用第三方库的兼容问题
+- flutter stable version 最好是3.19.x版本及以上，但最好还是3.19.x版本，低版本和高版本都会有引用第三方库的兼容问题
 - [dartssh](https://pub.dev/packages/dartssh2) SSH、SFTP功能库，这是功能实现的 核心
 - CupertinoUI 因为没有精力写那么多套UI所以全部平台统一使用Cupertino风格的界面，感觉还蛮顺眼的
 
@@ -31,7 +31,6 @@
 ## 一个不那么成功的样品
 - 全平台使用Cupertino风格除了便利一点外还会带来除Apple设备外的不适配
 - 一些组件的构建方式并不是最优解，因为还没学会Provider
-- 移动端的开始按钮仍有一些问题，好在没什么人会在移动端进行大量的SSH、SFTP操作；事实上SFTP没有什么问题，主要是SSH和终端构建的连接中出了些问题
 
 ## clone注意事项：
 - 确保设备的flutter环境 `flutter doctor -v`，如果没有的话请[下载](https://docs.flutter.dev/get-started/install)
@@ -40,3 +39,6 @@
 - 在项目目录下运行`flutter pub get`获取调用库
 - xterm、sqflite等库和flutter版本有着相当密切的关系建议使用时查看[对照表](https://pub.dev/packages/xterm/versions)
 - 使用`flutter run -v`或编译器的调试来运行项目
+
+## Windows build 注意事项
+- 发行版构建使用命令`flutter build windows`，但是这个命令生成的exe无法直接运行，因为flutter本身的原因，使用sqlite的项目在构建时并不会将sqlite的应用扩展打包在内，所以构建完成后需要[手动添加](https://www.sqlite.org/download.html)才能正常使用，否则只会在后台运行
