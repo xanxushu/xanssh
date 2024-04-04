@@ -1,4 +1,4 @@
-# xanssh（win和Linux）其他版本请查看[main分支](https://github.com/xanxushu/xanssh/tree/windows)
+# xanssh（win和Linux）其他版本请查看[main分支](https://github.com/xanxushu/xanssh)
 
 ## 简介
 
