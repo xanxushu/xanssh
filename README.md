@@ -1,4 +1,4 @@
-# xanssh（移动端和macOS），win和Linux请查看[windows分支](https://github.com/xanxushu/xanssh)
+# xanssh（移动端和macOS），win和Linux请查看[windows分支](https://github.com/xanxushu/xanssh/tree/windows)
 
 ## 简介
 
