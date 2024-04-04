@@ -12,7 +12,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_lints: ^2.0.0
   dartssh2: ^2.8.2
-  xterm: ^3.5.0
+  xterm: ^4.0.0
   desktop_multi_window: ^0.2.0
   sqflite: ^2.3.2
   path: ^1.8.3
